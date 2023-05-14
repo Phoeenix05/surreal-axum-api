@@ -15,11 +15,21 @@ use utoipa::{OpenApi, ToSchema};
 // use surrealdb::Surreal;
 
 #[derive(OpenApi)]
-#[openapi(paths(get_user, create_user), components(schemas(User)))]
+#[openapi(paths(get_user, create_user), components(schemas(User, Success)))]
 struct ApiDoc;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-struct User {}
+struct User {
+    email: String,
+    name: Option<String>,
+    password: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+struct Success {
+    status: String,
+    message: Option<String>,
+}
 
 #[tokio::main]
 async fn main() -> surrealdb::Result<()> {
@@ -60,6 +70,7 @@ async fn main() -> surrealdb::Result<()> {
 }
 
 #[utoipa::path(
+    tag = "User",
     get,
     path = "/user/:name",
     responses(
@@ -75,11 +86,12 @@ async fn get_user(Path(name): Path<String>) -> impl IntoResponse {
 }
 
 #[utoipa::path(
+    tag = "User",
     post,
     path = "/create/user",
     responses(
-        (status = 200, description = "User created successfully"),
-        (status = 400, description = "Creating new user failed")
+        (status = 200, description = "User created successfully", body = Success),
+        (status = 400, description = "Creating new user failed", body = Success)
     ),
     request_body = User
 )]
